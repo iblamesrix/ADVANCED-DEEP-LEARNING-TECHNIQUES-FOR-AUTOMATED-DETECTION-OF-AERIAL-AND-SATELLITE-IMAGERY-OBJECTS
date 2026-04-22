@@ -54,5 +54,5 @@ A densely connected CNN that improves feature propagation and reduces vanishing 
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git https://github.com/deekshwar/ADVANCED-DEEP-LEARNING-TECHNIQUES-FOR-AUTOMATED-DETECTION-OF-AERIAL-AND-SATELLITE-IMAGERY-OBJECTS/tree/main
+cd ADVANCED-DEEP-LEARNING-TECHNIQUES-FOR-AUTOMATED-DETECTION-OF-AERIAL-AND-SATELLITE-IMAGERY-object
