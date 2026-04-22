@@ -1,0 +1,33 @@
+project-root/
+│
+├── notebooks/ # Jupyter notebooks
+│ ├── M1_manualnet.ipynb
+│ ├── M2_xception.ipynb
+│ └── M3_densenet.ipynb
+│
+├── models/ # Saved trained models
+│ └── model.h5
+│
+├── app/ # Django app
+│ ├── migrations/
+│ ├── templates/
+│ ├── static/
+│ ├── init.py
+│ ├── admin.py
+│ ├── apps.py
+│ ├── forms.py
+│ ├── models.py
+│ ├── views.py
+│ └── urls.py
+│
+├── project/ # Django project config
+│ ├── init.py
+│ ├── settings.py
+│ ├── urls.py
+│ └── wsgi.py
+│
+├── manage.py
+├── requirements.txt
+├── README.md
+├── .gitignore
+└── LICENSE
