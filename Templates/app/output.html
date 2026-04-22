@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Image Classification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.pexels.com/photos/23793/rocket-launch-space-discovery.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+            padding: 1.5rem;
+            background: rgba(44, 62, 80, 0.85);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #ecf0f1;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .confidence-badge {
+            background: var(--secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .classified-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .classified-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .image-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 1.2rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .info-box h3 {
+            margin-bottom: 0.8rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-box h3 i {
+            margin-right: 8px;
+            color: var(--secondary);
+        }
+        
+        .info-content {
+            margin-left: 1.8rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .stat-item {
+            padding: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .description-container {
+            margin-top: 1.5rem;
+        }
+        
+        .description-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f1f8ff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .description-header:hover {
+            background: #e3f2fd;
+        }
+        
+        .description-header h2 {
+            margin: 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .description-header h2 i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+        
+        .description-content {
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #2d3436;
+            border-left: 3px solid var(--secondary);
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+        
+        .tag {
+            background: #e3f2fd;
+            color: var(--secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            color: white;
+            font-size: 0.9rem;
+            background: rgba(44, 62, 80, 0.85);
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Animation for the description toggle */
+        .description-content {
+            display: none;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Category-specific colors */
+        .category-AnnualCrop .card-header { background: #27ae60; }
+        .category-Forest .card-header { background: #2ecc71; }
+        .category-River .card-header { background: #3498db; }
+        .category-SeaLake .card-header { background: #2980b9; }
+        .category-Industrial .card-header { background: #f39c12; }
+        .category-Residential .card-header { background: #d35400; }
+        .category-Damage .card-header { background: #e74c3c; }
+        .category-Bridge .card-header { background: #9b59b6; }
+        .category-Highway .card-header { background: #34495e; }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .header, .card {
+                box-shadow: none;
+            }
+            
+            .description-content {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-satellite"></i> Satellite Image Classification</h1>
+            <p>Advanced analysis of aerial and satellite imagery using machine learning</p>
+        </div>
+        
+        {% if predict %}
+        <div class="card category-{{ predict }}">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-tag"></i> Classification: {{ predict | upper }}
+                </h2>
+               
+            </div>
+            
+            <div class="card-body">
+                {% if obj %}
+                <div class="image-container">
+                    <img src="{{ obj.image.url }}" alt="{{ predict }} Image" class="classified-image">
+                    <div class="image-overlay">
+                        <i class="fas fa-camera"></i> Source: Satellite Imagery
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3><i class="fas fa-info-circle"></i> Overview</h3>
+                        <div class="info-content">
+                            <!-- Unique content for each category -->
+                            {% if predict == "AnnualCrop" %}
+                            <p>Annual crops complete their life cycle within one growing season and are vital for global food supply. They include staples like wheat, corn, and rice that are planted and harvested within the same year.</p>
+                            
+                            {% elif predict == "Bridge aerial" %}
+                            <p>Aerial bridge imagery provides critical infrastructure insights, showing structural details, traffic patterns, and environmental context that are essential for maintenance and urban planning.</p>
+                            
+                            {% elif predict == "Damage" %}
+                            <p>Damage assessment imagery helps identify areas affected by natural disasters, conflicts, or accidents, enabling efficient response and recovery efforts.</p>
+                            
+                            {% elif predict == "Forest" %}
+                            <p>Forests cover approximately 31% of Earth's land area and play a crucial role in carbon sequestration, biodiversity preservation, and climate regulation.</p>
+                            
+                            {% elif predict == "Highway" %}
+                            <p>Highway systems form the backbone of transportation networks, facilitating economic activity and connectivity between urban and rural areas.</p>
+                            
+                            {% elif predict == "Industrial aerial" %}
+                            <p>Industrial areas are characterized by manufacturing facilities, warehouses, and logistical hubs that drive economic production and employment.</p>
+                            
+                            {% elif predict == "Industrial sat" %}
+                            <p>Satellite monitoring of industrial sites enables tracking of production activity, environmental compliance, and supply chain management.</p>
+                            
+                            {% elif predict == "Intersection aerial" %}
+                            <p>Aerial intersection imagery helps urban planners analyze traffic flow, identify congestion points, and design more efficient transportation systems.</p>
+                            
+                            {% elif predict == "Landmark aerial" %}
+                            <p>Iconic landmarks serve as cultural symbols and tourist attractions, with aerial imagery capturing their architectural grandeur and surrounding context.</p>
+                            
+                            {% elif predict == "Park aerial" %}
+                            <p>Urban parks provide essential green spaces for recreation, ecological benefits, and improved quality of life in densely populated areas.</p>
+                            
+                            {% elif predict == "Parking aerial" %}
+                            <p>Parking facility imagery assists in capacity planning, utilization analysis, and the design of efficient transportation infrastructure.</p>
+                            
+                            {% elif predict == "PermanentCrop" %}
+                            <p>Permanent crops like orchards and vineyards remain productive for multiple years, requiring specialized agricultural practices and long-term management.</p>
+                            
+                            {% elif predict == "Playground aerial" %}
+                            <p>Playgrounds are essential community spaces that promote physical activity, social development, and childhood well-being.</p>
+                            
+                            {% elif predict == "Residential aerial" %}
+                            <p>Residential areas represent human habitats, with aerial imagery revealing patterns of urbanization, population density, and community development.</p>
+                            
+                            {% elif predict == "Residential" %}
+                            <p>Satellite imagery of residential zones helps analyze urban sprawl, housing density, and infrastructure needs for growing populations.</p>
+                            
+                            {% elif predict == "River" %}
+                            <p>Rivers are vital freshwater resources that shape landscapes, support ecosystems, and provide water for agriculture, industry, and human consumption.</p>
+                            
+                            {% elif predict == "SeaLake" %}
+                            <p>Large water bodies influence regional climates, support diverse ecosystems, and provide resources for transportation, fishing, and recreation.</p>
+                            
+                            {% elif predict == "Shipsnet" %}
+                            <p>Maritime monitoring enables tracking of global shipping, fishing activities, and naval operations across the world's oceans.</p>
+                            
+                            {% elif predict == "Stadium aerial" %}
+                            <p>Sports stadiums serve as venues for entertainment, community gatherings, and major events that bring people together.</p>
+                            
+                            {% elif predict == "Waterbodies" %}
+                            <p>Water bodies include lakes, reservoirs, and ponds that provide essential resources for drinking water, irrigation, and ecological diversity.</p>
+                            
+                            {% else %}
+                            <p>{{ predict | upper }} represents a distinct classification in satellite imagery analysis with unique characteristics and applications.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3><i class="fas fa-chart-bar"></i> Key Characteristics</h3>
+                        <div class="info-content">
+                            <!-- Unique characteristics for each category -->
+                            {% if predict == "AnnualCrop" %}
+                            <ul>
+                                <li>Regular planting patterns in rows</li>
+                                <li>Distinct seasonal growth cycles</li>
+                                <li>Uniform crop health indicators</li>
+                                <li>Surrounding agricultural infrastructure</li>
+                            </ul>
+                            
+                            {% elif predict == "Bridge aerial" %}
+                            <ul>
+                                <li>Linear structure spanning obstacles</li>
+                                <li>Support pillars or suspension cables</li>
+                                <li>Approach roads and connection points</li>
+                                <li>Shadow patterns indicating height</li>
+                            </ul>
+                            
+                            {% elif predict == "Damage" %}
+                            <ul>
+                                <li>Irregular patterns indicating destruction</li>
+                                <li>Debris fields and structural collapse</li>
+                                <li>Disrupted transportation networks</li>
+                                <li>Changes from previous imagery baselines</li>
+                            </ul>
+                            
+                            {% elif predict == "Forest" %}
+                            <ul>
+                                <li>Dense vegetation canopy</li>
+                                <li>Varied tree height and density</li>
+                                <li>Undisturbed natural patterns</li>
+                                <li>Minimal human infrastructure</li>
+                            </ul>
+                            
+                            {% else %}
+                            <ul>
+                                <li>Distinct spectral signature</li>
+                                <li>Unique spatial patterns</li>
+                                <li>Specific texture features</li>
+                                <li>Characteristic shape properties</li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <h3><i class="fas fa-globe-americas"></i> Applications</h3>
+                        <div class="info-content">
+                            <!-- Unique applications for each category -->
+                            {% if predict == "AnnualCrop" %}
+                            <ul>
+                                <li>Crop yield prediction and monitoring</li>
+                                <li>Irrigation management and planning</li>
+                                <li>Disease and pest detection</li>
+                                <li>Food security assessment</li>
+                            </ul>
+                            
+                            {% elif predict == "Bridge aerial" %}
+                            <ul>
+                                <li>Infrastructure maintenance planning</li>
+                                <li>Traffic flow analysis and optimization</li>
+                                <li>Structural health monitoring</li>
+                                <li>Disaster response planning</li>
+                            </ul>
+                            
+                            {% elif predict == "Damage" %}
+                            <ul>
+                                <li>Disaster response coordination</li>
+                                <li>Damage assessment for insurance claims</li>
+                                <li>Recovery planning and resource allocation</li>
+                                <li>Risk mitigation planning</li>
+                            </ul>
+                            
+                            {% elif predict == "Forest" %}
+                            <ul>
+                                <li>Deforestation monitoring</li>
+                                <li>Wildfire risk assessment</li>
+                                <li>Biodiversity conservation</li>
+                                <li>Carbon sequestration tracking</li>
+                            </ul>
+                            
+                            {% else %}
+                            <ul>
+                                <li>Environmental monitoring</li>
+                                <li>Urban planning</li>
+                                <li>Agricultural assessment</li>
+                                <li>Disaster management</li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+               
+                <div class="description-container">
+                    <div class="description-header" onclick="toggleDescription()">
+                        <h2><i class="fas fa-file-alt"></i> Detailed Description</h2>
+                        <span id="toggle-icon"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="description-content" id="description-content">
+                        <!-- Dynamic content based on prediction category -->
+                        {% if predict == "AnnualCrop" %}
+                        <p>Annual crops are plants that complete their life cycle—from germination to the production of seeds—within one year, and then die. Monitoring these crops is crucial for ensuring food security, efficient resource use, and sustainable agricultural practices.</p>
+                        <p>Satellites equipped with advanced sensors provide invaluable data for this purpose. High-resolution imagery from satellites captures detailed information about crop health, growth stages, and biomass production. This data, combined with remote sensing techniques, allows for the assessment of various parameters such as vegetation indices, soil moisture content, and weather conditions.</p>
+                        <p>Satellite imagery helps in detecting stress factors like pests, diseases, and nutrient deficiencies early, enabling timely interventions. Additionally, it facilitates precision farming by allowing farmers to manage their fields more effectively, optimizing input usage such as water, fertilizers, and pesticides.</p>
+                        
+                        {% elif predict == "Bridge aerial" %}
+                        <p>A bridge aerial, often referred to as an overhead bridge shot, is a captivating aerial photograph or video capturing a bridge from a high vantage point, typically taken using a drone or helicopter. This perspective showcases the architectural elegance and engineering marvel of the bridge, highlighting its structure, length, and the surrounding landscape.</p>
+                        <p>It provides a unique view that emphasizes the bridge's connection points, the flow of traffic, and its integration with natural or urban settings. Such images often reveal the symmetry and design intricacies of the bridge, making them visually striking and informative.</p>
+                        <p>Aerial bridge shots are widely used in documentaries, promotional materials, and urban planning to illustrate the grandeur and significance of these vital infrastructures.</p>
+                        
+                        {% elif predict == "Damage" %}
+                        <p>The satellite imagery has revealed significant damage to the affected area, characterized by a range of destructive impacts visible from the high-resolution images. The damage appears as extensive surface alterations, including substantial alterations to infrastructure and natural landscapes.</p>
+                        <p>Urban areas show signs of structural damage, with buildings and roads exhibiting severe disruptions such as cracks, collapses, or partial destruction. In rural areas, there may be visible impacts on agricultural fields, forested regions, or waterways, which could include deforestation, erosion, or sediment displacement.</p>
+                        <p>The imagery highlights the extent and severity of the damage, providing crucial information for disaster response and recovery efforts. Detailed analysis of these images can help in assessing the full scope of the destruction, guiding resource allocation, and planning for rebuilding and rehabilitation.</p>
+                        
+                        {% elif predict == "Forest" %}
+                        <p>A forest is a vast, dense expanse of trees and undergrowth that covers a significant portion of the Earth's surface. It is a complex ecosystem characterized by a rich variety of flora and fauna, where towering trees form a canopy that filters sunlight, creating a diverse range of microhabitats below.</p>
+                        <p>Forests play a crucial role in regulating the Earth's climate by absorbing carbon dioxide and producing oxygen. They are also vital for maintaining biodiversity, providing habitat for countless species of plants, animals, and insects.</p>
+                        <p>Forests contribute to the water cycle by influencing rainfall patterns and preventing soil erosion through their root systems. The interplay between different layers of vegetation, including the forest floor, understory, and canopy, creates a dynamic environment that supports a myriad of ecological processes.</p>
+                        
+                        {% else %}
+                        <p>This image has been classified as <strong>{{ predict | upper }}</strong> based on analysis of its visual characteristics and patterns. Satellite image classification plays a crucial role in various applications including urban planning, environmental monitoring, agriculture, and disaster management.</p>
+                        <p>The classification process involves advanced machine learning algorithms that analyze spectral signatures, texture patterns, and spatial relationships within the image to accurately identify and categorize different land cover types and man-made structures.</p>
+                        {% endif %}
+                        
+                        <div class="tags">
+                            <span class="tag">Satellite Imagery</span>
+                            <span class="tag">Remote Sensing</span>
+                            <span class="tag">Classification</span>
+                            <span class="tag">Geospatial Analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <h2>No Classification Available</h2>
+                <p>Please upload an image for classification.</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Satellite Image Classification System &copy;  | Powered by Advanced ML Algorithms</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleDescription() {
+            const content = document.getElementById('description-content');
+            const icon = document.getElementById('toggle-icon');
+            
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                icon.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            } else {
+                content.style.display = 'block';
+                icon.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Additional initialization code can go here
+        });
+    </script>
+</body>
+</html>
